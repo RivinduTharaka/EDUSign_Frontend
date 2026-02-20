@@ -74,9 +74,9 @@ function getGestureImage(letter) {
  * Premium card style (white, clean)
  */
 const premiumCardSx = {
-  borderRadius: 3,
-  border: "1px solid rgba(3, 62, 138, 0.10)",
-  boxShadow: "0 16px 50px rgba(2,62,138,0.10)",
+  borderRadius: "16px",
+  border: "1px solid rgba(2, 62, 138, 0.08)",
+  boxShadow: "0 8px 32px rgba(2, 62, 138, 0.06)",
   background: "#fff",
 };
 
@@ -349,28 +349,37 @@ export default function LearningPage() {
     if (status === "correct")
       return (
         <Chip
-          icon={<CheckCircleRoundedIcon />}
+          icon={<CheckCircleRoundedIcon sx={{ fontSize: "18px !important" }} />}
           label="Correct"
+          size="small"
           color="success"
-          sx={{ fontWeight: 900 }}
+          sx={{ fontWeight: 700, borderRadius: "6px", px: 0.5 }}
         />
       );
 
     if (status === "wrong")
       return (
         <Chip
-          icon={<ErrorRoundedIcon />}
+          icon={<ErrorRoundedIcon sx={{ fontSize: "18px !important" }} />}
           label="Try again"
+          size="small"
           color="warning"
-          sx={{ fontWeight: 900 }}
+          sx={{ fontWeight: 700, borderRadius: "6px", px: 0.5 }}
         />
       );
 
     return (
       <Chip
-        icon={<HourglassBottomRoundedIcon />}
+        icon={<HourglassBottomRoundedIcon sx={{ fontSize: "18px !important" }} />}
         label="Waiting"
-        sx={{ fontWeight: 900 }}
+        size="small"
+        sx={{
+          fontWeight: 700,
+          borderRadius: "6px",
+          px: 0.5,
+          background: "rgba(0,0,0,0.05)",
+          color: "rgba(0,0,0,0.5)"
+        }}
       />
     );
   };
@@ -379,260 +388,300 @@ export default function LearningPage() {
     <Box
       sx={{
         minHeight: "100vh",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "stretch", // Ensure children stretch to full width
         background: `linear-gradient(180deg, ${COLORS.cloud} 0%, #ffffff 85%)`,
-        px: { xs: 1.5, sm: 3.5, md: 5 },
-        py: { xs: 2.2, sm: 3 },
+        px: { xs: 2.5, sm: 4, md: 5, lg: 6, xl: 8 },
+        py: { xs: 3, sm: 4 },
+        overflowX: "hidden"
       }}
     >
       {/* Top bar */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2.2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3.5 }}>
         <Tooltip title="Back">
           <IconButton
             onClick={() => navigate("/mode")}
             sx={{
-              border: "1px solid rgba(3,62,138,0.10)",
-              background: "rgba(255,255,255,0.8)",
+              border: "1px solid rgba(0,0,0,0.08)",
+              background: "#fff",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              "&:hover": { background: "#f8f9fa" }
             }}
           >
-            <ArrowBackRoundedIcon />
+            <ArrowBackRoundedIcon sx={{ fontSize: 20, color: COLORS.ink }} />
           </IconButton>
         </Tooltip>
 
         <Box>
-          <Typography sx={{ fontWeight: 950, fontSize: { xs: 22, sm: 28 }, color: COLORS.ink }}>
+          <Typography sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: COLORS.ink, lineHeight: 1.2 }}>
             Learning Mode
           </Typography>
-          <Typography sx={{ color: "rgba(11,18,32,0.65)", fontSize: 13.5 }}>
+          <Typography sx={{ color: "rgba(11,18,32,0.5)", fontSize: 13.5 }}>
             Practice letters at your own pace with real-time AI feedback
           </Typography>
         </Box>
 
         <Box sx={{ flex: 1 }} />
+
+        <Chip
+          label={
+            <Typography sx={{ fontSize: 13, color: COLORS.ink }}>
+              Target: <Box component="span" sx={{ fontWeight: 800 }}>{letter}</Box>
+            </Typography>
+          }
+          variant="outlined"
+          sx={{
+            borderRadius: "100px",
+            borderColor: "rgba(0,0,0,0.12)",
+            background: "#fff",
+            height: 36,
+            px: 0.5
+          }}
+        />
       </Box>
 
-      <Grid container spacing={2.5}>
-        {/* LEFT */}
-        <Grid item xs={12} md={7.5}>
-          <Stack spacing={2.5}>
-            <Card sx={premiumCardSx}>
-              <CardContent sx={{ p: { xs: 2.2, sm: 3 } }}>
-                <Typography sx={{ fontWeight: 950, color: COLORS.ink, mb: 1.5 }}>
-                  Camera
-                </Typography>
-
-                <WebcamPanel running={running} setRunning={setRunning} onFrame={predictFromFrame} />
-
-                {loadingPredict && (
-                  <Box sx={{ mt: 2 }}>
-                    <LinearProgress />
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card sx={premiumCardSx}>
-              <CardContent sx={{ p: { xs: 2.2, sm: 3 } }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Typography sx={{ fontWeight: 950, color: COLORS.ink }}>
-                    Live Feedback
+      <Box sx={{ width: "100%", flexGrow: 1 }}>
+        <Grid
+          container
+          spacing={4}
+          sx={{ width: "auto" }}
+        >
+          {/* LEFT COLUMN */}
+          <Grid size={{ xs: 12, md: 8, lg: 8, xl: 8 }}>
+            <Stack spacing={4}>
+              {/* Camera Card */}
+              <Card sx={premiumCardSx}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink, mb: 2.5 }}>
+                    Camera
                   </Typography>
-                  <Box sx={{ flex: 1 }} />
-                  <StatusChip />
-                </Stack>
 
-                <Divider sx={{ my: 1.7 }} />
+                  <WebcamPanel running={running} setRunning={setRunning} onFrame={predictFromFrame} />
 
-                <Stack direction="row" spacing={2} alignItems="center">
+                  {loadingPredict && (
+                    <Box sx={{ mt: 2, px: 2 }}>
+                      <LinearProgress sx={{ borderRadius: 10, height: 6 }} />
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Live Feedback Card */}
+              <Card sx={premiumCardSx}>
+                <CardContent sx={{ p: 4 }}>
+                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink }}>
+                      Live Feedback
+                    </Typography>
+                    <StatusChip />
+                  </Box>
+
+                  <Stack direction="row" spacing={3} alignItems="center">
+                    <Box
+                      sx={{
+                        width: 72,
+                        height: 72,
+                        borderRadius: "12px",
+                        display: "grid",
+                        placeItems: "center",
+                        background: status === "correct" ? "rgba(10,166,71,0.1)" : "rgba(173, 232, 244, 0.45)",
+                        border: "1px solid",
+                        borderColor: status === "correct" ? "rgba(10,166,71,0.2)" : "rgba(0,119,182,0.15)",
+                        flexShrink: 0,
+                        transition: "all 0.3s ease"
+                      }}
+                    >
+                      <Typography sx={{ fontWeight: 800, fontSize: 36, color: status === "correct" ? "#0aa647" : COLORS.blue }}>
+                        {pred?.label ?? "—"}
+                      </Typography>
+                    </Box>
+
+                    <Box>
+                      <Typography sx={{ color: COLORS.ink, fontSize: 15, fontWeight: 500 }}>
+                        {!running ? "Start your camera to begin practice" : feedback}
+                      </Typography>
+                      {running && pred && (
+                        <Typography sx={{ mt: 0.5, fontSize: 13, color: "rgba(11,18,32,0.4)" }}>
+                          System is {Math.round(pred.confidence * 100)}% sure
+                        </Typography>
+                      )}
+                    </Box>
+                  </Stack>
+
                   <Box
                     sx={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 3,
+                      mt: 3.5,
+                      p: 2,
+                      borderRadius: "12px",
+                      background: "rgba(173, 232, 244, 0.12)",
+                      border: "1px solid rgba(173, 232, 244, 0.25)",
+                    }}
+                  >
+                    <Typography sx={{ fontWeight: 800, fontSize: 13, color: COLORS.deep, mb: 0.5 }}>
+                      Tip for better accuracy
+                    </Typography>
+                    <Typography sx={{ fontSize: 12.5, color: "rgba(11,18,32,0.5)" }}>
+                      Keep your hand centered, steady, and well-lit. Avoid busy backgrounds.
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Stack>
+          </Grid>
+
+          {/* RIGHT COLUMN */}
+          <Grid size={{ xs: 12, md: 4, lg: 4, xl: 4 }}>
+            <Stack spacing={4}>
+              {/* Select Letter Card */}
+              <Card sx={premiumCardSx}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink, mb: 2 }}>
+                    Select Letter
+                  </Typography>
+
+                  <FormControl fullWidth>
+                    <Select
+                      value={letter}
+                      onChange={(e) => setLetter(e.target.value)}
+                      sx={selectBlackSx}
+                      MenuProps={menuPaperProps}
+                      size="small"
+                    >
+                      {LETTERS.map((L) => (
+                        <MenuItem key={L} value={L}>
+                          {L}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  <Box
+                    sx={{
+                      mt: 2.5,
+                      borderRadius: "12px",
+                      p: 3,
+                      textAlign: "center",
+                      background: "rgba(202, 240, 248, 0.25)",
+                      border: "1px solid rgba(202, 240, 248, 0.5)",
+                    }}
+                  >
+                    <Typography sx={{ color: "rgba(11,18,32,0.4)", fontSize: 13, mb: 0.5 }}>
+                      Practice this letter:
+                    </Typography>
+                    <Typography sx={{ fontSize: 64, fontWeight: 800, color: COLORS.deep, lineHeight: 1 }}>
+                      {letter}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+
+              {/* How to Sign Card */}
+              <Card sx={premiumCardSx}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink }}>
+                    How to sign “{letter}”
+                  </Typography>
+                  <Typography sx={{ mt: 0.5, color: "rgba(11,18,32,0.4)", fontSize: 13, mb: 2.5 }}>
+                    Match the hand shape shown below
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      borderRadius: "12px",
+                      overflow: "hidden",
+                      border: "1px solid rgba(0,0,0,0.06)",
+                      background: "#fdfdfd",
                       display: "grid",
                       placeItems: "center",
-                      background: "rgba(0, 119, 182, 0.10)",
-                      border: "1px solid rgba(0, 119, 182, 0.18)",
-                      flexShrink: 0,
+                      p: 1.5,
+                      aspectRatio: "4 / 3"
                     }}
                   >
-                    <Typography sx={{ fontWeight: 950, fontSize: 26, color: COLORS.deep }}>
-                      {pred?.label ?? "—"}
+                    <img
+                      src={getGestureImage(letter)}
+                      alt={`ASL ${letter}`}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                        borderRadius: 8,
+                      }}
+                      onError={(e) => (e.currentTarget.style.display = "none")}
+                    />
+                  </Box>
+                  <Typography sx={{ mt: 1.5, fontSize: 11, color: "rgba(0,0,0,0.3)", textAlign: "center" }}>
+                    (Add custom image at: src/assets/gestures/{letter}.png)
+                  </Typography>
+                </CardContent>
+              </Card>
+
+              {/* Stats Card */}
+              <Card sx={premiumCardSx}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink, mb: 2.5 }}>
+                    Stats (Letter {letter})
+                  </Typography>
+
+                  <Grid container spacing={1.5}>
+                    <Grid size={{ xs: 4 }}>
+                      <Box sx={{
+                        borderRadius: "10px", p: 1.5, textAlign: "center",
+                        background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.04)",
+                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <Typography sx={{ fontSize: 10, color: "rgba(0,0,0,0.4)", mb: 0.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          Attempts
+                        </Typography>
+                        <Typography sx={{ fontWeight: 800, fontSize: 24, color: COLORS.ink }}>
+                          {currentStats.attempts}
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    <Grid size={{ xs: 4 }}>
+                      <Box sx={{
+                        borderRadius: "10px", p: 1.5, textAlign: "center",
+                        background: "rgba(10,166,71,0.05)", border: "1px solid rgba(10,166,71,0.1)",
+                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <Typography sx={{ fontSize: 10, color: "rgba(0,0,0,0.4)", mb: 0.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          Correct
+                        </Typography>
+                        <Typography sx={{ fontWeight: 800, fontSize: 24, color: "#0aa647" }}>
+                          {currentStats.correct}
+                        </Typography>
+                      </Box>
+                    </Grid>
+
+                    <Grid size={{ xs: 4 }}>
+                      <Box sx={{
+                        borderRadius: "10px", p: 1.5, textAlign: "center",
+                        background: "rgba(0,119,182,0.05)", border: "1px solid rgba(0,119,182,0.1)",
+                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
+                      }}>
+                        <Typography sx={{ fontSize: 10, color: "rgba(0,0,0,0.4)", mb: 0.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          Accuracy
+                        </Typography>
+                        <Typography sx={{ fontWeight: 800, fontSize: 24, color: COLORS.blue }}>
+                          {currentStats.accuracy}%
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+
+                  <Box sx={{ mt: 3, textAlign: "center" }}>
+                    <Typography sx={{ fontSize: 12.5, color: "rgba(11,18,32,0.5)", lineHeight: 1.5, fontWeight: 500 }}>
+                      Aim for 80%+ accuracy before moving to the next letter.
                     </Typography>
                   </Box>
-
-                  <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ color: "rgba(11,18,32,0.70)", lineHeight: 1.6 }}>
-                      {feedback}
-                    </Typography>
-
-                    <Typography sx={{ mt: 0.7, fontSize: 12.5, color: "rgba(11,18,32,0.55)" }}>
-                      Confidence:{" "}
-                      {pred?.confidence != null ? `${Math.round(pred.confidence * 100)}%` : "—"}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Stack>
+                </CardContent>
+              </Card>
+            </Stack>
+          </Grid>
         </Grid>
-
-        {/* RIGHT */}
-        <Grid item xs={12} md={4.5}>
-          <Stack spacing={2.5} sx={{ position: { md: "sticky" }, top: { md: 18 } }}>
-            <Card sx={premiumCardSx}>
-              <CardContent sx={{ p: { xs: 2.2, sm: 3 } }}>
-                <Typography sx={{ fontWeight: 950, color: COLORS.ink, mb: 1.5 }}>
-                  Select Letter
-                </Typography>
-
-                <FormControl fullWidth>
-                  <Select
-                    value={letter}
-                    onChange={(e) => setLetter(e.target.value)}
-                    sx={selectBlackSx}
-                    MenuProps={menuPaperProps}
-                  >
-                    {LETTERS.map((L) => (
-                      <MenuItem key={L} value={L} sx={{ color: "#0B1220" }}>
-                        {L}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <Box
-                  sx={{
-                    mt: 2,
-                    borderRadius: 3,
-                    p: 2,
-                    textAlign: "center",
-                    background:
-                      "linear-gradient(180deg, rgba(0,119,182,0.10), rgba(0,180,216,0.06))",
-                    border: "1px solid rgba(0,119,182,0.14)",
-                  }}
-                >
-                  <Typography sx={{ color: "rgba(11,18,32,0.65)", fontSize: 13 }}>
-                    Practice this letter:
-                  </Typography>
-                  <Typography sx={{ mt: 0.4, fontSize: 58, fontWeight: 950, color: COLORS.deep }}>
-                    {letter}
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-
-            <Card sx={premiumCardSx}>
-              <CardContent sx={{ p: { xs: 2.2, sm: 3 } }}>
-                <Typography sx={{ fontWeight: 950, color: COLORS.ink }}>
-                  How to sign “{letter}”
-                </Typography>
-                <Typography sx={{ mt: 0.5, color: "rgba(11,18,32,0.65)", fontSize: 13 }}>
-                  Match the hand shape shown below
-                </Typography>
-
-                <Box
-                  sx={{
-                    mt: 1.6,
-                    borderRadius: 3,
-                    overflow: "hidden",
-                    border: "1px solid rgba(3,62,138,0.10)",
-                    background: "#fff",
-                    display: "grid",
-                    placeItems: "center",
-                    p: 1.5,
-                  }}
-                >
-                  <img
-                    src={getGestureImage(letter)}
-                    alt={`ASL ${letter}`}
-                    style={{
-                      width: "100%",
-                      maxWidth: 260,
-                      height: "auto",
-                      borderRadius: 14,
-                      display: "block",
-                    }}
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-
-                  <Typography sx={{ mt: 1, fontSize: 12.5, color: "rgba(11,18,32,0.55)" }}>
-                    (Add image at: src/assets/gestures/{letter}.png)
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-
-            <Card sx={premiumCardSx}>
-              <CardContent sx={{ p: { xs: 2.2, sm: 3 } }}>
-                <Typography sx={{ fontWeight: 950, color: COLORS.ink, mb: 1.5 }}>
-                  Stats (Letter {letter})
-                </Typography>
-
-                <Grid container spacing={1.5}>
-                  <Grid item xs={4}>
-                    <Box
-                      sx={{
-                        borderRadius: 3,
-                        p: 1.4,
-                        background: "rgba(0,0,0,0.03)",
-                        border: "1px solid rgba(0,0,0,0.06)",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 12.5, color: "rgba(11,18,32,0.60)" }}>
-                        Attempts
-                      </Typography>
-                      <Typography sx={{ fontWeight: 950, fontSize: 22, color: COLORS.ink }}>
-                        {currentStats.attempts}
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={4}>
-                    <Box
-                      sx={{
-                        borderRadius: 3,
-                        p: 1.4,
-                        background: "rgba(10,166,71,0.08)",
-                        border: "1px solid rgba(10,166,71,0.12)",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 12.5, color: "rgba(11,18,32,0.60)" }}>
-                        Correct
-                      </Typography>
-                      <Typography sx={{ fontWeight: 950, fontSize: 22, color: "#0aa647" }}>
-                        {currentStats.correct}
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  <Grid item xs={4}>
-                    <Box
-                      sx={{
-                        borderRadius: 3,
-                        p: 1.4,
-                        background: "rgba(0,119,182,0.08)",
-                        border: "1px solid rgba(0,119,182,0.12)",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Typography sx={{ fontSize: 12.5, color: "rgba(11,18,32,0.60)" }}>
-                        Accuracy
-                      </Typography>
-                      <Typography sx={{ fontWeight: 950, fontSize: 22, color: COLORS.blue }}>
-                        {currentStats.accuracy}%
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Stack>
-        </Grid>
-      </Grid>
+      </Box>
     </Box>
   );
 }
