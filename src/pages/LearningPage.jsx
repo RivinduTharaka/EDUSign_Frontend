@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   Button,
@@ -21,6 +20,8 @@ import VideocamRoundedIcon from "@mui/icons-material/VideocamRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
 import HourglassBottomRoundedIcon from "@mui/icons-material/HourglassBottomRounded";
+import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -36,18 +37,41 @@ const LETTERS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i)
 /**
  * Theme palette (white / black / blue)
  */
-const COLORS = {
-  deep: "#03045E",
-  navy: "#023E8A",
-  blue: "#0077B6",
-  sky: "#0096C7",
-  cyan: "#00B4D8",
-  ice: "#48CAE4",
-  mist: "#90E0EF",
-  snow: "#ADE8F4",
-  cloud: "#CAF0F8",
-  ink: "#0B1220",
+const THEMES = {
+  light: {
+    primary: "#1A73E8",
+    primaryDark: "#1557B0",
+    secondary: "#4C6EF5",
+    accent: "#22D3EE",
+    background: "#F1F5F9",
+    card: "rgba(255, 255, 255, 0.9)",
+    cardBorder: "rgba(0, 0, 0, 0.05)",
+    textPrimary: "#0F172A",
+    textSecondary: "#64748B",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
+    divider: "rgba(0, 0, 0, 0.05)",
+    glass: "rgba(255, 255, 255, 0.7)",
+  },
+  dark: {
+    primary: "#3B82F6",
+    primaryDark: "#2563EB",
+    secondary: "#6366F1",
+    accent: "#06B6D4",
+    background: "#0F172A",
+    card: "rgba(30, 41, 59, 0.8)",
+    cardBorder: "rgba(255, 255, 255, 0.1)",
+    textPrimary: "#F8FAFC",
+    textSecondary: "#94A3B8",
+    success: "#10B981",
+    warning: "#FBBF24",
+    error: "#F87171",
+    divider: "rgba(255, 255, 255, 0.05)",
+    glass: "rgba(15, 23, 42, 0.6)",
+  },
 };
+const LS_THEME_KEY = "edusign_theme_mode";
 
 function loadStats() {
   try {
@@ -70,56 +94,73 @@ function getGestureImage(letter) {
   return new URL(`../assets/gestures/${letter}.png`, import.meta.url).href;
 }
 
-/**
- * Premium card style (white, clean)
- */
-const premiumCardSx = {
-  borderRadius: "16px",
-  border: "1px solid rgba(2, 62, 138, 0.08)",
-  boxShadow: "0 8px 32px rgba(2, 62, 138, 0.06)",
-  background: "#fff",
-};
+const getPremiumCardSx = (C) => ({
+  borderRadius: "20px",
+  border: "1px solid",
+  borderColor: C.cardBorder,
+  background: C.card,
+  backdropFilter: "blur(16px)",
+  boxShadow: `0 4px 24px ${C.background === "#F1F5F9" ? "rgba(0,0,0,0.04)" : "rgba(0,0,0,0.2)"}`,
+  position: "relative",
+  overflow: "hidden",
+  transition: "all 0.3s ease",
+});
 
-/**
- * ✅ Dropdown styles: force BLACK text so it's visible
- */
-const selectBlackSx = {
-  color: "#0B1220",
+const getSelectSx = (C) => ({
+  color: C.textPrimary,
   "& .MuiSelect-select": {
-    color: "#0B1220",
+    color: C.textPrimary,
+    fontWeight: 600,
+    py: 1,
   },
   "& .MuiSvgIcon-root": {
-    color: "rgba(11,18,32,0.75)", // dropdown arrow
+    color: C.textSecondary,
   },
   "& fieldset": {
-    borderColor: "rgba(3, 62, 138, 0.18)",
+    borderColor: C.cardBorder,
+    borderRadius: "12px",
   },
   "&:hover fieldset": {
-    borderColor: "rgba(3, 62, 138, 0.30)",
+    borderColor: C.textSecondary,
   },
   "&.Mui-focused fieldset": {
-    borderColor: "rgba(3, 62, 138, 0.45)",
+    borderColor: C.primary,
   },
-};
+});
 
-const menuPaperProps = {
+const getMenuPaperProps = (C) => ({
   PaperProps: {
     sx: {
-      borderRadius: 2,
-      mt: 1,
-      border: "1px solid rgba(3,62,138,0.10)",
-      boxShadow: "0 18px 60px rgba(2,62,138,0.14)",
+      borderRadius: 3,
+      mt: 0.5,
+      background: C.background,
+      border: `1px solid ${C.cardBorder}`,
+      boxShadow: "0 12px 40px rgba(0, 0, 0, 0.15)",
       "& .MuiMenuItem-root": {
-        color: "#0B1220",
+        color: C.textPrimary,
+        fontSize: "14px",
+        mx: 0.5,
+        my: 0.2,
+        borderRadius: "8px",
+        "&:hover": {
+          background: C.divider,
+        },
+        "&.Mui-selected": {
+          background: C.primary,
+          color: "#FFF",
+          "&:hover": {
+            background: C.primaryDark,
+          },
+        },
       },
     },
   },
-};
+});
 
 /**
  * Webcam Panel
  */
-function WebcamPanel({ onFrame, running, setRunning }) {
+function WebcamPanel({ onFrame, running, setRunning, colors: C }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const canvasRef = useRef(null);
@@ -192,10 +233,11 @@ function WebcamPanel({ onFrame, running, setRunning }) {
         sx={{
           borderRadius: 3,
           overflow: "hidden",
-          background: "#000",
-          border: "1px solid rgba(3,62,138,0.10)",
+          // background: "#000",
+          border: `1px solid ${C.cardBorder}`,
           aspectRatio: "16 / 9",
           position: "relative",
+          // boxShadow: "0 8px 30px rgba(0, 0, 0, 0.15)",
         }}
       >
         <video
@@ -212,6 +254,50 @@ function WebcamPanel({ onFrame, running, setRunning }) {
         />
         <canvas ref={canvasRef} style={{ display: "none" }} />
 
+        {/* Technical Overlays */}
+        {running && (
+          <>
+            {/* Corner Brackets */}
+            <Box sx={{ position: "absolute", top: 15, left: 15, width: 30, height: 30, borderTop: "1.5px solid #fff", borderLeft: "1.5px solid #fff", opacity: 0.5 }} />
+            <Box sx={{ position: "absolute", top: 15, right: 15, width: 30, height: 30, borderTop: "1.5px solid #fff", borderRight: "1.5px solid #fff", opacity: 0.5 }} />
+            <Box sx={{ position: "absolute", bottom: 15, left: 15, width: 30, height: 30, borderBottom: "1.5px solid #fff", borderLeft: "1.5px solid #fff", opacity: 0.5 }} />
+            <Box sx={{ position: "absolute", bottom: 15, right: 15, width: 30, height: 30, borderBottom: "1.5px solid #fff", borderRight: "1.5px solid #fff", opacity: 0.5 }} />
+
+            {/* Tag */}
+            <Box
+              sx={{
+                position: "absolute",
+                top: 15,
+                left: 15,
+                display: "flex",
+                alignItems: "center",
+                gap: 0.8,
+                // background: "rgba(0,0,0,0.7)",
+                backdropFilter: "blur(4px)",
+                px: 1.2,
+                py: 0.4,
+                borderRadius: "4px",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  backgroundColor: C.error,
+                  animation: "pulse 1.5s infinite",
+                  "@keyframes pulse": {
+                    "0%": { opacity: 1, transform: "scale(1)" },
+                    "50%": { opacity: 0.5, transform: "scale(1.2)" },
+                    "100%": { opacity: 1, transform: "scale(1)" },
+                  },
+                }}
+              />
+              <Typography sx={{ color: "#fff", fontSize: 9, fontWeight: 700, letterSpacing: 1 }}>ANALYSIS ACTIVE</Typography>
+            </Box>
+          </>
+        )}
+
         {!running && (
           <Box
             sx={{
@@ -219,16 +305,18 @@ function WebcamPanel({ onFrame, running, setRunning }) {
               inset: 0,
               display: "grid",
               placeItems: "center",
-              background: "linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.55))",
-              color: "rgba(255,255,255,0.92)",
+              background: C.background === "#F1F5F9" ? "rgba(241, 245, 249, 0.95)" : "rgba(15, 21, 42, 0.95)",
+              backdropFilter: "blur(8px)",
+              color: C.textPrimary,
               textAlign: "center",
               px: 2,
             }}
           >
             <Box>
-              <Typography sx={{ fontWeight: 900, fontSize: 16 }}>Camera is off</Typography>
-              <Typography sx={{ mt: 0.5, fontSize: 13, opacity: 0.85 }}>
-                Click “Start Camera” to begin practicing
+              <VideocamRoundedIcon sx={{ fontSize: 40, mb: 1, color: C.textSecondary, opacity: 0.3 }} />
+              <Typography sx={{ fontWeight: 800, fontSize: 16 }}>Camera Standby</Typography>
+              <Typography sx={{ mt: 0.5, fontSize: 12, color: C.textSecondary, maxWidth: 220 }}>
+                Activate your camera to start real-time ASL recognition
               </Typography>
             </Box>
           </Box>
@@ -237,24 +325,31 @@ function WebcamPanel({ onFrame, running, setRunning }) {
 
       <Button
         fullWidth
+        variant="contained"
         startIcon={<VideocamRoundedIcon />}
         onClick={() => (running ? stop() : start())}
         sx={{
           mt: 2,
-          py: 1.2,
-          borderRadius: 2.5,
-          background: COLORS.deep,
-          color: "white",
-          fontWeight: 900,
+          py: 1,
+          borderRadius: "12px",
+          background: running ? `${C.error}22` : C.primary,
+          color: running ? C.error : "#FFF",
+          border: running ? `1px solid ${C.error}44` : "none",
+          fontWeight: 700,
+          fontSize: "14px",
           textTransform: "none",
-          "&:hover": { background: COLORS.navy },
+          boxShadow: running ? "none" : `0 4px 12px ${C.primary}33`,
+          "&:hover": {
+            background: running ? `${C.error}33` : C.primaryDark,
+          },
+          transition: "all 0.2s ease",
         }}
       >
-        {running ? "Stop Camera" : "Start Camera"}
+        {running ? "Stop Camera" : "Start Practice"}
       </Button>
 
       {error && (
-        <Typography sx={{ mt: 1, color: "error.main", fontSize: 13 }}>
+        <Typography sx={{ mt: 1, color: C.error, fontSize: 12, textAlign: "center", fontWeight: 600 }}>
           {error}
         </Typography>
       )}
@@ -264,6 +359,16 @@ function WebcamPanel({ onFrame, running, setRunning }) {
 
 export default function LearningPage() {
   const navigate = useNavigate();
+
+  // Theme support
+  const [themeMode, setThemeMode] = useState(() => localStorage.getItem(LS_THEME_KEY) || "dark");
+  const C = THEMES[themeMode];
+
+  useEffect(() => {
+    localStorage.setItem(LS_THEME_KEY, themeMode);
+  }, [themeMode]);
+
+  const toggleTheme = () => setThemeMode(themeMode === "light" ? "dark" : "light");
 
   const [letter, setLetter] = useState("A");
   const [running, setRunning] = useState(false);
@@ -322,16 +427,16 @@ export default function LearningPage() {
 
         if (isCorrect) {
           setStatus("correct");
-          setFeedback("Correct ✅ Great job! Hold steady for a moment.");
+          setFeedback("Excellent! Gesture recognized correctly.");
           bumpAttempt(true);
         } else {
           if (conf >= 0.55) bumpAttempt(false);
           setStatus("wrong");
-          setFeedback(`Try again: I see "${label ?? "-"}" (${Math.round(conf * 100)}%).`);
+          setFeedback(`Not quite: Detected "${label ?? "-"}" (${Math.round(conf * 100)}%).`);
         }
       } catch (e) {
         setStatus("waiting");
-        setFeedback("Waiting for backend prediction...");
+        setFeedback("Waiting for system response...");
       } finally {
         setLoadingPredict(false);
       }
@@ -342,345 +447,346 @@ export default function LearningPage() {
   useEffect(() => {
     setPred(null);
     setStatus("waiting");
-    setFeedback("Waiting for hand gesture...");
+    setFeedback("Awaiting visual acquisition...");
   }, [letter]);
 
   const StatusChip = () => {
     if (status === "correct")
       return (
         <Chip
-          icon={<CheckCircleRoundedIcon sx={{ fontSize: "18px !important" }} />}
-          label="Correct"
+          icon={<CheckCircleRoundedIcon sx={{ fontSize: "14px !important" }} />}
+          label="RECOGNIZED"
           size="small"
-          color="success"
-          sx={{ fontWeight: 700, borderRadius: "6px", px: 0.5 }}
+          sx={{
+            fontWeight: 800,
+            borderRadius: "6px",
+            px: 0.5,
+            fontSize: "10px",
+            height: 24,
+            background: C.success,
+            color: "#FFF",
+          }}
         />
       );
 
     if (status === "wrong")
       return (
         <Chip
-          icon={<ErrorRoundedIcon sx={{ fontSize: "18px !important" }} />}
-          label="Try again"
+          icon={<ErrorRoundedIcon sx={{ fontSize: "14px !important" }} />}
+          label="ANALYZING"
           size="small"
-          color="warning"
-          sx={{ fontWeight: 700, borderRadius: "6px", px: 0.5 }}
+          sx={{
+            fontWeight: 800,
+            borderRadius: "6px",
+            px: 0.5,
+            fontSize: "10px",
+            height: 24,
+            background: `${C.warning}22`,
+            color: C.warning,
+            border: `1px solid ${C.warning}44`,
+          }}
         />
       );
 
     return (
       <Chip
-        icon={<HourglassBottomRoundedIcon sx={{ fontSize: "18px !important" }} />}
-        label="Waiting"
+        icon={<HourglassBottomRoundedIcon sx={{ fontSize: "14px !important" }} />}
+        label="STANDBY"
         size="small"
         sx={{
-          fontWeight: 700,
+          fontWeight: 800,
           borderRadius: "6px",
           px: 0.5,
-          background: "rgba(0,0,0,0.05)",
-          color: "rgba(0,0,0,0.5)"
+          fontSize: "10px",
+          height: 24,
+          background: C.divider,
+          color: C.textSecondary,
         }}
       />
     );
   };
 
+  const premiumCard = getPremiumCardSx(C);
+
   return (
     <Box
       sx={{
-        minHeight: "100vh",
-        width: "100%",
+        height: { xs: "auto", md: "100vh" },
+        width: "100vw",
         display: "flex",
         flexDirection: "column",
-        alignItems: "stretch", // Ensure children stretch to full width
-        background: `linear-gradient(180deg, ${COLORS.cloud} 0%, #ffffff 85%)`,
-        px: { xs: 2.5, sm: 4, md: 5, lg: 6, xl: 8 },
-        py: { xs: 3, sm: 4 },
-        overflowX: "hidden"
+        background: C.background,
+        px: { xs: 2, md: 3 }, // Slightly reduced padding for more width
+        py: { xs: 2, md: 2 },
+        color: C.textPrimary,
+        overflow: { xs: "auto", md: "hidden" },
+        position: "relative",
+        transition: "background 0.3s ease",
       }}
     >
-      {/* Top bar */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3.5 }}>
+      {/* Top Header */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
         <Tooltip title="Back">
           <IconButton
             onClick={() => navigate("/mode")}
             sx={{
-              border: "1px solid rgba(0,0,0,0.08)",
-              background: "#fff",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              "&:hover": { background: "#f8f9fa" }
+              background: C.glass,
+              border: `1px solid ${C.cardBorder}`,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              "&:hover": { background: C.divider, transform: "translateX(-2px)" },
             }}
           >
-            <ArrowBackRoundedIcon sx={{ fontSize: 20, color: COLORS.ink }} />
+            <ArrowBackRoundedIcon sx={{ fontSize: 18, color: C.textPrimary }} />
           </IconButton>
         </Tooltip>
 
         <Box>
-          <Typography sx={{ fontWeight: 800, fontSize: { xs: 22, sm: 26 }, color: COLORS.ink, lineHeight: 1.2 }}>
-            Learning Mode
+          <Typography sx={{ fontWeight: 900, fontSize: 22, color: C.textPrimary, lineHeight: 1 }}>
+            Practice Mode
           </Typography>
-          <Typography sx={{ color: "rgba(11,18,32,0.5)", fontSize: 13.5 }}>
-            Practice letters at your own pace with real-time AI feedback
+          <Typography sx={{ color: C.textSecondary, fontSize: 11, mt: 0.5, fontWeight: 500 }}>
+            Session ID: ASL-{letter}-902
           </Typography>
         </Box>
 
         <Box sx={{ flex: 1 }} />
 
-        <Chip
-          label={
-            <Typography sx={{ fontSize: 13, color: COLORS.ink }}>
-              Target: <Box component="span" sx={{ fontWeight: 800 }}>{letter}</Box>
-            </Typography>
-          }
-          variant="outlined"
+        {/* Theme Toggle */}
+        <Tooltip title={themeMode === "light" ? "Switch to Dark" : "Switch to Light"}>
+          <IconButton
+            onClick={toggleTheme}
+            sx={{
+              background: C.glass,
+              border: `1px solid ${C.cardBorder}`,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+              mr: 1,
+              "&:hover": { background: C.divider },
+            }}
+          >
+            {themeMode === "light" ? (
+              <DarkModeRoundedIcon sx={{ fontSize: 18, color: C.textPrimary }} />
+            ) : (
+              <LightModeRoundedIcon sx={{ fontSize: 18, color: C.textPrimary }} />
+            )}
+          </IconButton>
+        </Tooltip>
+
+        <Box
           sx={{
-            borderRadius: "100px",
-            borderColor: "rgba(0,0,0,0.12)",
-            background: "#fff",
-            height: 36,
-            px: 0.5
+            background: C.glass,
+            border: `1px solid ${C.cardBorder}`,
+            borderRadius: "12px",
+            px: 2,
+            py: 0.8,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
           }}
-        />
+        >
+          <Typography sx={{ fontSize: 10, color: C.textSecondary, fontWeight: 800, letterSpacing: 1 }}>
+            TARGET
+          </Typography>
+          <Typography sx={{ fontSize: 20, fontWeight: 900, color: C.primary }}>
+            {letter}
+          </Typography>
+        </Box>
       </Box>
 
-      <Box sx={{ width: "100%", flexGrow: 1 }}>
-        <Grid
-          container
-          spacing={4}
-          sx={{ width: "auto" }}
-        >
-          {/* LEFT COLUMN */}
-          <Grid size={{ xs: 12, md: 8, lg: 8, xl: 8 }}>
-            <Stack spacing={4}>
-              {/* Camera Card */}
-              <Card sx={premiumCardSx}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink, mb: 2.5 }}>
-                    Camera
+      <Box
+        sx={{
+          flex: 1,
+          width: "100%",
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 2.5,
+          minHeight: 0,
+        }}
+      >
+        {/* Left: Video & Analysis */}
+        <Box sx={{ flex: 6, display: "flex", flexDirection: "column", gap: 2.5, minHeight: 0 }}>
+          <Card sx={{ ...premiumCard, flex: 1, display: "flex", flexDirection: "column" }}>
+            <CardContent sx={{ p: 2, flex: 1, display: "flex", flexDirection: "column" }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1.5 }}>
+                <Typography sx={{ fontWeight: 800, fontSize: 13, color: C.textPrimary }}>
+                  Acquisition Feed
+                </Typography>
+                <Typography sx={{ fontSize: 10, color: C.textSecondary, fontWeight: 700 }}>
+                  320x240 @ 350ms
+                </Typography>
+              </Box>
+              <Box sx={{ flex: 1, minHeight: 0 }}>
+                <WebcamPanel running={running} setRunning={setRunning} onFrame={predictFromFrame} colors={C} />
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+
+        {/* Right: Config, Analysis & Reference */}
+        <Box sx={{ flex: 6, display: "flex", flexDirection: "column", gap: 2.5, minHeight: 0 }}>
+          <Card sx={premiumCard}>
+            <CardContent sx={{ p: 2 }}>
+              <Typography sx={{ fontWeight: 800, fontSize: 13, color: C.textPrimary, mb: 1.5 }}>
+                Module Config
+              </Typography>
+              <FormControl fullWidth>
+                <Select
+                  value={letter}
+                  onChange={(e) => setLetter(e.target.value)}
+                  sx={getSelectSx(C)}
+                  MenuProps={getMenuPaperProps(C)}
+                  size="small"
+                >
+                  {LETTERS.map((L) => (
+                    <MenuItem key={L} value={L}>ASL Glyph: {L}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </CardContent>
+          </Card>
+
+          {/* New Row: Analysis & Reference */}
+          <Box sx={{ display: "flex", gap: 2.5, flex: 1, minHeight: 0 }}>
+            {/* Neural Analysis */}
+            <Card sx={{ ...premiumCard, flex: 1 }}>
+              <CardContent sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                  <Typography sx={{ fontWeight: 800, fontSize: 13, color: C.textPrimary }}>
+                    Neural Analysis
                   </Typography>
+                  <StatusChip />
+                </Box>
 
-                  <WebcamPanel running={running} setRunning={setRunning} onFrame={predictFromFrame} />
-
-                  {loadingPredict && (
-                    <Box sx={{ mt: 2, px: 2 }}>
-                      <LinearProgress sx={{ borderRadius: 10, height: 6 }} />
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Live Feedback Card */}
-              <Card sx={premiumCardSx}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-                    <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink }}>
-                      Live Feedback
-                    </Typography>
-                    <StatusChip />
-                  </Box>
-
-                  <Stack direction="row" spacing={3} alignItems="center">
-                    <Box
-                      sx={{
-                        width: 72,
-                        height: 72,
-                        borderRadius: "12px",
-                        display: "grid",
-                        placeItems: "center",
-                        background: status === "correct" ? "rgba(10,166,71,0.1)" : "rgba(173, 232, 244, 0.45)",
-                        border: "1px solid",
-                        borderColor: status === "correct" ? "rgba(10,166,71,0.2)" : "rgba(0,119,182,0.15)",
-                        flexShrink: 0,
-                        transition: "all 0.3s ease"
-                      }}
-                    >
-                      <Typography sx={{ fontWeight: 800, fontSize: 36, color: status === "correct" ? "#0aa647" : COLORS.blue }}>
-                        {pred?.label ?? "—"}
-                      </Typography>
-                    </Box>
-
-                    <Box>
-                      <Typography sx={{ color: COLORS.ink, fontSize: 15, fontWeight: 500 }}>
-                        {!running ? "Start your camera to begin practice" : feedback}
-                      </Typography>
-                      {running && pred && (
-                        <Typography sx={{ mt: 0.5, fontSize: 13, color: "rgba(11,18,32,0.4)" }}>
-                          System is {Math.round(pred.confidence * 100)}% sure
-                        </Typography>
-                      )}
-                    </Box>
-                  </Stack>
-
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1 }}>
                   <Box
                     sx={{
-                      mt: 3.5,
-                      p: 2,
-                      borderRadius: "12px",
-                      background: "rgba(173, 232, 244, 0.12)",
-                      border: "1px solid rgba(173, 232, 244, 0.25)",
-                    }}
-                  >
-                    <Typography sx={{ fontWeight: 800, fontSize: 13, color: COLORS.deep, mb: 0.5 }}>
-                      Tip for better accuracy
-                    </Typography>
-                    <Typography sx={{ fontSize: 12.5, color: "rgba(11,18,32,0.5)" }}>
-                      Keep your hand centered, steady, and well-lit. Avoid busy backgrounds.
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Stack>
-          </Grid>
-
-          {/* RIGHT COLUMN */}
-          <Grid size={{ xs: 12, md: 4, lg: 4, xl: 4 }}>
-            <Stack spacing={4}>
-              {/* Select Letter Card */}
-              <Card sx={premiumCardSx}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink, mb: 2 }}>
-                    Select Letter
-                  </Typography>
-
-                  <FormControl fullWidth>
-                    <Select
-                      value={letter}
-                      onChange={(e) => setLetter(e.target.value)}
-                      sx={selectBlackSx}
-                      MenuProps={menuPaperProps}
-                      size="small"
-                    >
-                      {LETTERS.map((L) => (
-                        <MenuItem key={L} value={L}>
-                          {L}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <Box
-                    sx={{
-                      mt: 2.5,
-                      borderRadius: "12px",
-                      p: 3,
-                      textAlign: "center",
-                      background: "rgba(202, 240, 248, 0.25)",
-                      border: "1px solid rgba(202, 240, 248, 0.5)",
-                    }}
-                  >
-                    <Typography sx={{ color: "rgba(11,18,32,0.4)", fontSize: 13, mb: 0.5 }}>
-                      Practice this letter:
-                    </Typography>
-                    <Typography sx={{ fontSize: 64, fontWeight: 800, color: COLORS.deep, lineHeight: 1 }}>
-                      {letter}
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
-
-              {/* How to Sign Card */}
-              <Card sx={premiumCardSx}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink }}>
-                    How to sign “{letter}”
-                  </Typography>
-                  <Typography sx={{ mt: 0.5, color: "rgba(11,18,32,0.4)", fontSize: 13, mb: 2.5 }}>
-                    Match the hand shape shown below
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      borderRadius: "12px",
-                      overflow: "hidden",
-                      border: "1px solid rgba(0,0,0,0.06)",
-                      background: "#fdfdfd",
+                      width: 64,
+                      height: 64,
+                      borderRadius: "16px",
                       display: "grid",
                       placeItems: "center",
-                      p: 1.5,
-                      aspectRatio: "4 / 3"
+                      background: status === "correct" ? `${C.success}15` : `${C.primary}10`,
+                      border: `1px solid ${status === "correct" ? `${C.success}33` : `${C.primary}22`}`,
+                      flexShrink: 0,
                     }}
                   >
-                    <img
-                      src={getGestureImage(letter)}
-                      alt={`ASL ${letter}`}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "contain",
-                        borderRadius: 8,
+                    <Typography
+                      sx={{
+                        fontWeight: 900,
+                        fontSize: 32,
+                        color: status === "correct" ? C.success : C.primary,
                       }}
-                      onError={(e) => (e.currentTarget.style.display = "none")}
-                    />
-                  </Box>
-                  <Typography sx={{ mt: 1.5, fontSize: 11, color: "rgba(0,0,0,0.3)", textAlign: "center" }}>
-                    (Add custom image at: src/assets/gestures/{letter}.png)
-                  </Typography>
-                </CardContent>
-              </Card>
-
-              {/* Stats Card */}
-              <Card sx={premiumCardSx}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography sx={{ fontWeight: 800, fontSize: 16, color: COLORS.ink, mb: 2.5 }}>
-                    Stats (Letter {letter})
-                  </Typography>
-
-                  <Grid container spacing={1.5}>
-                    <Grid size={{ xs: 4 }}>
-                      <Box sx={{
-                        borderRadius: "10px", p: 1.5, textAlign: "center",
-                        background: "rgba(0,0,0,0.02)", border: "1px solid rgba(0,0,0,0.04)",
-                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-                      }}>
-                        <Typography sx={{ fontSize: 10, color: "rgba(0,0,0,0.4)", mb: 0.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                          Attempts
-                        </Typography>
-                        <Typography sx={{ fontWeight: 800, fontSize: 24, color: COLORS.ink }}>
-                          {currentStats.attempts}
-                        </Typography>
-                      </Box>
-                    </Grid>
-
-                    <Grid size={{ xs: 4 }}>
-                      <Box sx={{
-                        borderRadius: "10px", p: 1.5, textAlign: "center",
-                        background: "rgba(10,166,71,0.05)", border: "1px solid rgba(10,166,71,0.1)",
-                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-                      }}>
-                        <Typography sx={{ fontSize: 10, color: "rgba(0,0,0,0.4)", mb: 0.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                          Correct
-                        </Typography>
-                        <Typography sx={{ fontWeight: 800, fontSize: 24, color: "#0aa647" }}>
-                          {currentStats.correct}
-                        </Typography>
-                      </Box>
-                    </Grid>
-
-                    <Grid size={{ xs: 4 }}>
-                      <Box sx={{
-                        borderRadius: "10px", p: 1.5, textAlign: "center",
-                        background: "rgba(0,119,182,0.05)", border: "1px solid rgba(0,119,182,0.1)",
-                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center"
-                      }}>
-                        <Typography sx={{ fontSize: 10, color: "rgba(0,0,0,0.4)", mb: 0.5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                          Accuracy
-                        </Typography>
-                        <Typography sx={{ fontWeight: 800, fontSize: 24, color: COLORS.blue }}>
-                          {currentStats.accuracy}%
-                        </Typography>
-                      </Box>
-                    </Grid>
-                  </Grid>
-
-                  <Box sx={{ mt: 3, textAlign: "center" }}>
-                    <Typography sx={{ fontSize: 12.5, color: "rgba(11,18,32,0.5)", lineHeight: 1.5, fontWeight: 500 }}>
-                      Aim for 80%+ accuracy before moving to the next letter.
+                    >
+                      {pred?.label ?? "—"}
                     </Typography>
                   </Box>
-                </CardContent>
-              </Card>
-            </Stack>
-          </Grid>
-        </Grid>
+
+                  <Box sx={{ flex: 1 }}>
+                    <Typography sx={{ color: C.textPrimary, fontSize: 14, fontWeight: 700, mb: 0.5, lineHeight: 1.2 }}>
+                      {!running ? "Paused" : feedback}
+                    </Typography>
+                    {running && pred && (
+                      <Box sx={{ mt: 1 }}>
+                        <Box sx={{ width: "100%", height: 4, background: C.divider, borderRadius: 10, overflow: "hidden", mb: 0.5 }}>
+                          <Box
+                            sx={{
+                              width: `${pred.confidence * 100}%`,
+                              height: "100%",
+                              background: status === "correct" ? C.success : C.primary,
+                              transition: "width 0.3s ease",
+                            }}
+                          />
+                        </Box>
+                        <Typography sx={{ fontSize: 9, color: C.textSecondary, fontWeight: 600 }}>
+                          {Math.round(pred.confidence * 100)}% Match
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Visual Reference */}
+            <Card sx={{ ...premiumCard, flex: 1 }}>
+              <CardContent sx={{ p: 2, height: "100%", display: "flex", flexDirection: "column" }}>
+                <Typography sx={{ fontWeight: 800, fontSize: 13, color: C.textPrimary, mb: 0.5 }}>
+                  Visual Reference
+                </Typography>
+                <Typography sx={{ color: C.textSecondary, fontSize: 10, mb: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  Match the gesture below
+                </Typography>
+
+                <Box
+                  sx={{
+                    flex: 1,
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    background: C.divider,
+                    display: "grid",
+                    placeItems: "center",
+                    p: 1.5,
+                    position: "relative",
+                    border: `1px dashed ${C.cardBorder}`,
+                  }}
+                >
+                  <img
+                    src={getGestureImage(letter)}
+                    alt={`ASL ${letter}`}
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "100%",
+                      objectFit: "contain",
+                      filter: themeMode === "dark" ? "brightness(0.9) contrast(1.1)" : "none",
+                    }}
+                    onError={(e) => (e.currentTarget.style.display = "none")}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Session Analytics */}
+          <Card sx={premiumCard}>
+            <CardContent sx={{ p: 2 }}>
+              <Typography sx={{ fontWeight: 800, fontSize: 13, color: C.textPrimary, mb: 1.5 }}>
+                Session Analytics
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 1.5,
+                  flexWrap: "wrap"
+                }}
+              >
+                {[
+                  { label: "Attempts", value: currentStats.attempts, color: C.textSecondary },
+                  { label: "Success", value: currentStats.correct, color: C.success },
+                  { label: "Accuracy", value: `${currentStats.accuracy}%`, color: C.primary },
+                ].map((stat) => (
+                  <Box
+                    key={stat.label}
+                    sx={{
+                      flex: 1,
+                      minWidth: "70px",
+                      p: 1,
+                      borderRadius: "10px",
+                      background: C.divider,
+                      textAlign: "center",
+                      border: `1px solid ${C.cardBorder}`
+                    }}
+                  >
+                    <Typography sx={{ fontSize: 8, fontWeight: 700, color: C.textSecondary, textTransform: "uppercase", mb: 0.2 }}>
+                      {stat.label}
+                    </Typography>
+                    <Typography sx={{ fontSize: 14, fontWeight: 900, color: stat.color }}>
+                      {stat.value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
       </Box>
     </Box>
   );
