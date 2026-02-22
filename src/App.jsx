@@ -6,6 +6,7 @@ import LoaderScreen from "./pages/LoaderScreen";
 import BeginScreen from "./pages/BeginScreen";
 import ModeSelectScreen from "./pages/ModeSelectScreen";
 import LearningPage from "./pages/LearningPage";
+import WordBuildingPage from "./pages/WordBuildingPage";
 
 function LoaderRedirect() {
   const navigate = useNavigate();
@@ -21,9 +22,10 @@ export default function App() {
     <Box sx={{ minHeight: "100vh" }}>
       <Routes>
         <Route path="/" element={<LoaderRedirect />} />
-        <Route path="/begin" element={<BeginScreen onBegin={() => {}} />} />
+        <Route path="/begin" element={<BeginScreen onBegin={() => { }} />} />
         <Route path="/mode" element={<ModeSelectScreen />} />
         <Route path="/learn" element={<LearningPage />} />
+        <Route path="/quiz" element={<WordBuildingPage />} />
       </Routes>
     </Box>
   );

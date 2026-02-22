@@ -211,9 +211,9 @@ export default function ModeSelectScreen() {
           />
 
           <Card
-            title="Quiz Mode"
+            title="Word Building"
             desc="Test your skills with random letters and scoring. When you sign correctly, the system pauses briefly and moves to the next."
-            cta="Take Quiz"
+            cta="Start Word Building"
             onClick={() => navigate("/quiz")}
           />
         </Box>
